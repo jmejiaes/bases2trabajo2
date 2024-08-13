@@ -29,7 +29,8 @@ contract Gallery {
     Work[] public works; // List of works
     Winner[] public winners; // List of winners
 
-    constructor(uint _prizePool) payable {
+    constructor() payable {
+        uint _prizePool = msg.value;
         require(_prizePool >= 1 ether && _prizePool <= 90 ether,
             "The prize pool must be between 1 and 90 Ethers"
         );
