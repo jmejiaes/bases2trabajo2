@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.8.0;
+pragma solidity 0.8.26;
 pragma abicoder v2;
 
 contract Gallery {
@@ -26,6 +26,7 @@ contract Gallery {
     address public owner; // Contract owner
     address public critic; // Art critic
     uint public prizePool; // Prize pool amount
+    uint public quota; // Prize pool amount
     Work[] public works; // List of works
     Winner[] public winners; // List of winners
 
@@ -37,6 +38,7 @@ contract Gallery {
         owner = msg.sender;
         prizePool = _prizePool;
         state = State.Created;
+        quota = _prizePool / 2;
     }
 
     modifier onlyOwner() {
@@ -63,10 +65,7 @@ contract Gallery {
 
         // Check that the work is not already added
         for (uint i = 0; i < works.length; i++) {
-            require(keccak256(abi.encodePacked(works[i].url)) != keccak256(abi.encodePacked(_url)),
-                "The work has already been added"
-            );
-        }
+            require(keccak256(abi.encodePacked(works[i].url)) != keccak256(abi.encodePacked(_url)), "La obra ya ha sido agregada");        }
 
         // Check that the artist is not already participating with another work
         for (uint i = 0; i < works.length; i++) {
@@ -74,7 +73,7 @@ contract Gallery {
         }
 
         // Check that the registration fee is correct
-        require(msg.value == prizePool / 2, "The registration fee must be half of the prize pool");
+        require(msg.value == quota , "The registration fee must be half of the prize pool");
 
         // Add the work to the list
         works.push(Work(msg.sender, _name, _url, 0, "", false));
@@ -92,9 +91,16 @@ contract Gallery {
         return works;
     }
 
-    function rateWork(uint _index, uint _rating, string memory _comment) public onlyCritic {
+    function rateWork(string memory _url, uint _rating, string memory _comment) public onlyCritic {
         require(state == State.RegistrationClosed, "The contract must be in RegistrationClosed state");
         require(_rating >= 1 && _rating <= 10, "The rating must be between 1 and 10");
+
+        // Buscar el índice basado en la URL
+        uint _index = findWorkIndexByUrl(_url);
+        require(_index != type(uint).max, "Work not found");
+
+        // Comprobar que no haya otro trabajo con la misma calificación
+        require(!isRatingTaken(_rating), "Another work already has this rating");
 
         Work storage work = works[_index];
 
@@ -106,13 +112,35 @@ contract Gallery {
             work.rated = true;
         }
 
-        // Sort the list of works by rating from highest to lowest
+        // Ordenar la lista de trabajos por calificación de mayor a menor
         for (uint i = _index; i > 0 && works[i].rating > works[i - 1].rating; i--) {
             Work memory temp = works[i];
             works[i] = works[i - 1];
             works[i - 1] = temp;
         }
     }
+
+    // Función auxiliar para encontrar el índice de un trabajo basado en la URL
+    function findWorkIndexByUrl(string memory _url) internal view returns (uint) {
+        for (uint i = 0; i < works.length; i++) {
+            if (keccak256(abi.encodePacked(works[i].url)) == keccak256(abi.encodePacked(_url))) {
+                return i;
+            }
+        }
+        return type(uint).max; // Retorna el valor máximo de uint si no se encuentra el trabajo
+    }
+
+    // Función auxiliar para comprobar si la calificación ya ha sido asignada a otro trabajo
+    function isRatingTaken(uint _rating) internal view returns (bool) {
+        for (uint i = 0; i < works.length; i++) {
+            if (works[i].rating == _rating) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
     function finishRating() public onlyCritic {
         require(state == State.RegistrationClosed, "The contract must be in RegistrationClosed state");
@@ -125,7 +153,7 @@ contract Gallery {
         state = State.Judged;
     }
 
-    function finishContest() public onlyOwner {
+    function finishContest() public payable onlyOwner {
         require(state == State.Judged, "The contract must be in Judged state");
 
         // Calculate prizes
@@ -152,4 +180,6 @@ contract Gallery {
         require(state == State.Inactive, "The contract must be in Inactive state");
         return winners;
     }
+
+
 }
