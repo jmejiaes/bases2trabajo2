@@ -15,5 +15,5 @@ contract Concurso{
     enum Estado {Creado, Iniciado, CerradoInscripciones, Juzgado, Inactivo}
 
     Estado public estado;
-    
+
 }
