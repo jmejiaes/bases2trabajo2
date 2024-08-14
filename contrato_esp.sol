@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 contract Galeria {
     // Definir los atributos del contrato
-    enum Estado {Creado, Iniciado, RegistroCerrado, Juzgado, Inactivo}
+    enum Estado {Creado, Iniciado, CerradoInscripciones, Juzgado, Inactivo}
 
     struct Obra {
         address artista; // Dirección del artista
@@ -84,11 +84,11 @@ contract Galeria {
     function cerrarInscripciones() public soloPropietario {
         require(estado == Estado.Iniciado, "El contrato debe estar en estado Iniciado");
         require(obras.length >= 4, "El numero minimo de obras es 4");
-        estado = Estado.RegistroCerrado;
+        estado = Estado.CerradoInscripciones;
     }
 
     function verObras() public view soloCritico returns (string memory) {
-        require(estado == Estado.RegistroCerrado, "El contrato debe estar en estado RegistroCerrado");
+        require(estado == Estado.CerradoInscripciones, "El contrato debe estar en estado CerradoInscripciones");
         string memory listaObras = "";
         for (uint i = 0; i < obras.length; i++) {
             listaObras = string(abi.encodePacked(
@@ -104,7 +104,7 @@ contract Galeria {
 
 
     function calificarObra(string memory _url, uint _calificacion, string memory _comentario) public soloCritico {
-        require(estado == Estado.RegistroCerrado, "El contrato debe estar en estado RegistroCerrado");
+        require(estado == Estado.CerradoInscripciones, "El contrato debe estar en estado CerradoInscripciones");
         require(_calificacion >= 1 && _calificacion <= 10, "La calificacion debe estar entre 1 y 10");
 
         uint _indice = encontrarIndiceObraPorUrl(_url);
