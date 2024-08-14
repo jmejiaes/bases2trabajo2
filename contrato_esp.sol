@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 contract Galeria {
     // Definir los atributos del contrato
-    enum Estado {Creado, Iniciado, RegistroCerrado, Calificado, Inactivo}
+    enum Estado {Creado, Iniciado, RegistroCerrado, Juzgado, Inactivo}
 
     struct Obra {
         address artista; // Dirección del artista
@@ -95,7 +95,7 @@ contract Galeria {
                 listaObras, 
                 "**Obra ", toString(i+1), "** ", 
                 verObraParaCalificacion(i), 
-                "-------------------" // Añade un salto de línea extra entre obras
+                "-------------------" 
             ));
         }
         return listaObras;
@@ -158,11 +158,11 @@ contract Galeria {
             require(obras[i].calificada == true, "No todas las obras han sido calificadas");
         }
 
-        estado = Estado.Calificado;
+        estado = Estado.Juzgado;
     }
 
     function terminarConcurso() public payable soloPropietario {
-        require(estado == Estado.Calificado, "El contrato debe estar en estado Calificado");
+        require(estado == Estado.Juzgado, "El contrato debe estar en estado Juzgado");
 
         // Calcular premios
         uint premio1 = valorBolsa / 2;
