@@ -151,7 +151,7 @@ contract Galeria {
     }
 
     function terminarCalificacion() public soloCritico {
-        require(estado == Estado.RegistroCerrado, "El contrato debe estar en estado RegistroCerrado");
+        require(estado == Estado.CerradoInscripciones, "El contrato debe estar en estado RegistroCerrado");
 
         // Comprobar que todas las obras han sido calificadas
         for (uint i = 0; i < obras.length; i++) {
